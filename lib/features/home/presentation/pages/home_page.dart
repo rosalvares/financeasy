@@ -1,44 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/home_providers.dart';
+import 'transfer_page.dart';
+import 'package:financeasy/core/utils/formatters.dart';
 
-class HomePage extends ConsumerWidget  {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final saldo = ref.watch(saldoProvider);
-    final transactions = ref.watch(transacoesProvider);
+    final balance = ref.watch(balanceProvider);
+    final transactions = ref.watch(transactionProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('FinancEasy'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TransferPage()),
+          );
+        },
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Saldo disponível', style: Theme.of(context).textTheme.titleMedium),
-            Text(
-              'R\$ ${saldo.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.green),
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              color: Colors.green.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Saldo disponível', style: TextStyle(fontSize: 16)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'R\$ ${balance.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 24),
-            const Text('Últimas transações', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Últimas transações',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Expanded(
-              child: ListView.builder(
+              child: ListView.separated(
                 itemCount: transactions.length,
+                separatorBuilder: (_, __) => const Divider(),
                 itemBuilder: (context, index) {
-                  final transacao = transactions[index];
-                  final isEntrada = transacao['valor']! >= 0;
+                  final transaction = transactions[index];
+                  final isEntrada = transaction.value >= 0;
                   return ListTile(
-                    leading: Icon(isEntrada ? Icons.arrow_downward : Icons.arrow_upward,
-                        color: isEntrada ? Colors.green : Colors.red),
-                    title: Text(transacao['titulo'].toString()),
+                    leading: Icon(
+                      isEntrada ? Icons.arrow_downward : Icons.arrow_upward,
+                      color: isEntrada ? Colors.green : Colors.red,
+                    ),
+                    title: Text(transaction.title),
+                    subtitle: Text(
+                      dateFormat(transaction.date),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     trailing: Text(
-                      'R\$ ${transacao['valor']?.toStringAsFixed(2)}',
+                      'R\$ ${transaction.value.toStringAsFixed(2)}',
                       style: TextStyle(
                         color: isEntrada ? Colors.green : Colors.red,
                         fontWeight: FontWeight.bold,

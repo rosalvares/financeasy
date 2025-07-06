@@ -1,11 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'home_notifier.dart';
+import '../../data/models/transaction_model.dart';
 
-// Saldo inicial
-final saldoProvider = StateProvider<double>((ref) => 1500.00);
+// Provider do notifier (estado da lista de transações)
+final transactionProvider = StateNotifierProvider<TransactionNotifier, List<TransactionModel>>(
+      (ref) => TransactionNotifier(),
+);
 
-// Lista de transações mock
-final transacoesProvider = Provider<List<Map<String, dynamic>>>((ref) => [
-  {'titulo': 'Pix recebido', 'valor': 300.0},
-  {'titulo': 'Pagamento boleto', 'valor': -120.0},
-  {'titulo': 'Transferência enviada', 'valor': -200.0},
-]);
+// Provider computado para o saldo total
+final balanceProvider = Provider<double>((ref) {
+  final transactions = ref.watch(transactionProvider);
+  return transactions.fold(0.0, (total, t) => total + t.value);
+});
